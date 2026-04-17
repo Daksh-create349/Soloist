@@ -31,7 +31,7 @@ export function StatsRow() {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
       {isLoading ? (
         [1, 2, 3, 4].map((i) => (
-          <div key={i} className="h-[140px] glass animate-pulse rounded-[24px]" />
+          <div key={i} className="h-[140px] glass rounded-[24px]" />
         ))
       ) : (
         stats.map((stat, index) => (

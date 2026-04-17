@@ -1,7 +1,15 @@
+"use client";
+
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { getProfile, UserConfigResponse } from "@/lib/api";
+import { toast } from "sonner";
+import { Bell, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 export function TopBar() {
+  const router = useRouter();
   const [profile, setProfile] = useState<UserConfigResponse | null>(null);
 
   useEffect(() => {
@@ -24,11 +32,14 @@ export function TopBar() {
       className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12"
     >
       <div>
+        <p className="text-solo-blue text-[11px] font-bold uppercase tracking-[0.2em] mb-2">
+          {profile?.agency_name || "Soloist"} Command Center
+        </p>
         <h1 className="font-serif text-[32px] md:text-[40px] font-bold text-text-primary mb-1 tracking-[-0.02em]">
           Good morning, {profile?.name.split(' ')[0] || "Operator"} <span className="inline-block origin-bottom hover:animate-wave">👋</span>
         </h1>
         <p className="text-text-secondary text-[15px] flex items-center gap-2">
-          Managing <span className="font-semibold text-solo-blue underline underline-offset-4 decoration-solo-blue/30">{profile?.agency_name || "Soloist"}</span> • <span className="font-medium text-text-primary">3 new opportunities today</span>
+           You have <span className="font-semibold text-solo-blue underline underline-offset-4 decoration-solo-blue/30">3 new opportunities</span> matching your <span className="font-medium text-text-primary">{profile?.niche || "freelance"}</span> profile.
         </p>
       </div>
 

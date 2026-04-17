@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { CheckCircle2, Clock, RefreshCw, Zap } from "lucide-react";
-import { getAutomations, AutomationResponse } from "@/lib/api";
+import { CheckCircle2, Clock, RefreshCw, Zap, FileText, Calendar, AlertCircle, Play } from "lucide-react";
+import { getAutomations, executeAutomation, AutomationResponse } from "@/lib/api";
+import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function AutomationsStatus() {
   const [automations, setAutomations] = useState<AutomationResponse[]>([]);
@@ -24,15 +26,57 @@ export function AutomationsStatus() {
   }, []);
 
   const getIcon = (action_type: string) => {
-    if (action_type === 'email') return <CheckCircle2 className="w-4 h-4 text-solo-teal" />;
-    if (action_type === 'draft_invoice') return <RefreshCw className="w-4 h-4 text-solo-blue" />;
-    return <Clock className="w-4 h-4 text-solo-amber" />;
+    switch(action_type) {
+      case 'sync_notion': return <FileText className="w-4 h-4 text-solo-teal" />;
+      case 'add_calendar': return <Calendar className="w-4 h-4 text-solo-blue" />;
+      case 'sync_jira': return <AlertCircle className="w-4 h-4 text-solo-coral" />;
+      case 'generate_proposal': return <FileText className="w-4 h-4 text-solo-teal" />;
+      case 'send_email': return <CheckCircle2 className="w-4 h-4 text-solo-blue" />;
+      default: return <Clock className="w-4 h-4 text-solo-amber" />;
+    }
   };
   
   const getBg = (action_type: string) => {
-    if (action_type === 'email') return "bg-solo-teal/10";
-    if (action_type === 'draft_invoice') return "bg-solo-blue/10";
-    return "bg-solo-amber/10";
+    switch(action_type) {
+      case 'sync_notion': return 'bg-solo-teal/10';
+      case 'add_calendar': return 'bg-solo-blue/10';
+      case 'sync_jira': return 'bg-solo-coral/10';
+      case 'generate_proposal': return 'bg-solo-teal/10';
+      case 'send_email': return 'bg-solo-blue/10';
+      default: return "bg-solo-amber/10";
+    }
+  };
+
+  const handleExecute = async (id: number) => {
+    const toastId = toast.loading("Executing automation...");
+    try {
+      const res = await executeAutomation(id);
+      toast.dismiss(toastId);
+      
+      if (res.success) {
+        if (res.simulated) {
+          toast.info("Automation Executed (Simulation Mode)", {
+            description: "No API keys found. Action was logged successfully.",
+            duration: 4000,
+          });
+        } else {
+          toast.success("Automation Triggered Successfully", {
+             description: res.message || "Action completed.",
+             duration: 4000,
+          });
+        }
+      } else {
+        toast.error("Execution failed", {
+          description: res.message || "Check your integration settings.",
+          duration: 5000,
+        });
+      }
+    } catch (e: any) {
+      toast.dismiss(toastId);
+      toast.error("Network Error", {
+        description: "Please check your server connection.",
+      });
+    }
   };
 
   return (
@@ -48,11 +92,22 @@ export function AutomationsStatus() {
 
       <div className="flex flex-col gap-4">
         {isLoading ? (
-           <div className="py-4 text-center text-text-tertiary">Loading automations...</div>
+           <div className="flex flex-col gap-4">
+             {[1, 2, 3].map((i) => (
+               <div key={i} className="flex items-center gap-4 p-3 border border-transparent">
+                 <Skeleton className="w-10 h-10 rounded-full shrink-0" />
+                 <div className="flex-grow space-y-2">
+                   <Skeleton className="h-4 w-32" />
+                   <Skeleton className="h-3 w-20" />
+                 </div>
+                 <Skeleton className="w-16 h-8 rounded-md" />
+               </div>
+             ))}
+           </div>
         ) : automations.slice(0, 3).map((item) => (
           <div key={item.id} className="group flex items-center gap-4 p-3 rounded-[10px] hover:bg-background-secondary/50 transition-colors border border-transparent hover:border-border-tertiary/50">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${getBg(item.action_type)}`}>
-              {getIcon(item.action_type)}
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${getBg(item.action_type || "")}`}>
+              {getIcon(item.action_type || "")}
             </div>
             <div className="flex-grow">
               <h4 className="text-[14px] font-bold text-text-primary leading-tight mb-1 group-hover:text-solo-blue transition-colors">
@@ -62,9 +117,12 @@ export function AutomationsStatus() {
                 {item.lastRun}
               </p>
             </div>
-            <div className="text-[10px] font-bold uppercase tracking-widest text-text-tertiary bg-background-secondary px-2 py-1 rounded-md border border-border-tertiary/30 shrink-0">
-              {item.status}
-            </div>
+            <button 
+              onClick={() => handleExecute(item.id)}
+              className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-text-secondary hover:text-solo-blue hover:bg-solo-blue/10 bg-background-secondary px-2.5 py-1.5 rounded-md border border-border-tertiary/30 shrink-0 transition-colors"
+            >
+              <Play className="w-3 h-3" /> Test Run
+            </button>
           </div>
         ))}
       </div>

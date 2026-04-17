@@ -4,51 +4,67 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Sparkles, ArrowRight, Check, Rocket, Zap, Target, Loader2 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Sparkles, ArrowRight, Check, Rocket, Zap, Target, Loader2, Wand2, ShieldCheck, Trophy } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { updateProfile, calibrateProfile } from "@/lib/api";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const STAGES = [
-  { id: "identity", title: "Identity", description: "Define your solo presence." },
-  { id: "niche", title: "Focus", description: "Where do you dominate?" },
-  { id: "simulation", title: "Calibration", description: "AI is learning your patterns." },
-  { id: "ready", title: "Launch", description: "Your OS is ready." }
+  { id: "persona", title: "Persona", description: "Identify yourself." },
+  { id: "calibration", title: "Intelligence", description: "AI is mapping your path." },
+  { id: "review", title: "Review", description: "Verify your OS configuration." },
+  { id: "ready", title: "Launch", description: "Terminal ready." }
 ];
 
-import { updateProfile } from "@/lib/api";
 
 export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
-  const [direction, setDirection] = useState(1);
+  const [isCalibrating, setIsCalibrating] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
+    bio: "",
     agency: "",
     niche: "",
+    specialization: "",
     goals: [] as string[]
   });
 
-  const nextStep = () => {
-    setDirection(1);
-    setStep((s) => s + 1);
-  };
-
-  const prevStep = () => {
-    setDirection(-1);
-    setStep((s) => s - 1);
-  };
-
-  // Simulate AI Calibration
-  useEffect(() => {
-    if (step === 2) {
-      const timer = setTimeout(() => {
-        nextStep();
-      }, 4000);
-      return () => clearTimeout(timer);
+  const handleCalibrate = async () => {
+    setIsCalibrating(true);
+    setStep(1);
+    try {
+      const result = await calibrateProfile({ name: formData.name, bio: formData.bio });
+      setFormData(prev => ({
+        ...prev,
+        agency: result.agency_name,
+        niche: result.niche,
+        specialization: result.specialization,
+        goals: result.goals
+      }));
+      // Smooth transition to review
+      setTimeout(() => {
+        setStep(2);
+        setIsCalibrating(false);
+      }, 2500);
+    } catch (e) {
+      console.error(e);
+      toast.error("AI bridge interrupted. Using fallback calibration.");
+      setFormData(prev => ({
+        ...prev,
+        agency: `${formData.name} Labs`,
+        niche: "Independent Specialist",
+        goals: ["Maximize billable rate", "Automate business ops", "Secure high-tier contracts"]
+      }));
+      setStep(2);
+      setIsCalibrating(false);
     }
-  }, [step]);
+  };
 
   const handleFinish = async () => {
+    const toastId = toast.loading("Finalizing your OS...");
     try {
       await updateProfile({
         name: formData.name,
@@ -56,197 +72,175 @@ export default function OnboardingPage() {
         niche: formData.niche,
         goals: formData.goals
       });
-      toast.success("System ready. Welcome to Soloist.");
+      toast.success("Command Center Operational", { id: toastId });
       router.push("/dashboard");
     } catch (error) {
-      console.error("Failed to save profile", error);
-      toast.error("Profile save failed, but proceeding to dashboard...");
-      router.push("/dashboard");
+       router.push("/dashboard");
     }
   };
 
+  // Prefetch dashboard for instant transition
+  useEffect(() => {
+    if (step === 3) {
+      router.prefetch("/dashboard");
+    }
+  }, [step, router]);
+
   return (
     <main className="min-h-screen bg-background-primary flex flex-col items-center justify-center p-6 mesh-gradient overflow-hidden">
-      {/* BACKGROUND DECOR */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-solo-blue/5 blur-[120px] rounded-full pointer-events-none" />
       
-      <div className="w-full max-w-[600px] relative">
-        {/* PROGRESS INDICATOR */}
-        <div className="flex justify-between mb-12 relative px-4">
+      <div className="w-full max-w-[650px] relative">
+        {/* PROGRESS */}
+        <div className="flex justify-between mb-16 relative px-4 max-w-[400px] mx-auto">
           <div className="absolute top-[22px] left-0 right-0 h-[1px] bg-border-tertiary z-0" />
           {STAGES.map((s, i) => (
             <div key={s.id} className="relative z-10 flex flex-col items-center gap-3">
               <div className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-500 border-2 ${i <= step ? "bg-solo-blue border-solo-blue text-white shadow-lg shadow-solo-blue/20" : "bg-white border-border-tertiary text-text-tertiary"}`}>
                 {i < step ? <Check className="w-5 h-5" /> : <span className="text-[14px] font-bold">{i + 1}</span>}
               </div>
-              <span className={`text-[10px] font-bold uppercase tracking-widest transition-colors ${i === step ? "text-solo-blue" : "text-text-tertiary"}`}>
-                {s.title}
-              </span>
             </div>
           ))}
         </div>
 
-        {/* CONTENT CARD */}
-        <div className="bg-white border border-border-tertiary rounded-[32px] p-10 md:p-14 shadow-2xl shadow-black/[0.03] min-h-[460px] flex flex-col relative overflow-hidden">
-          <AnimatePresence mode="wait" custom={direction}>
-            <motion.div
-              key={step}
-              custom={direction}
-              initial={{ opacity: 0, x: direction * 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -direction * 50 }}
-              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              className="flex-1 flex flex-col h-full"
-            >
-              {step === 0 && (
-                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                  <div className="space-y-3">
-                    <h1 className="font-serif text-[32px] md:text-[42px] font-bold text-text-primary tracking-tight leading-none">
-                      Who is at the helm?
-                    </h1>
-                    <p className="text-text-secondary text-[16px] leading-relaxed">
-                      Every Soloist agent needs a commander. <br />First, let's identify your presence.
-                    </p>
-                  </div>
-
-                  <div className="space-y-6 pt-4">
-                    <div className="space-y-2">
-                      <label className="text-[11px] font-bold uppercase tracking-[0.2em] text-text-tertiary ml-1">Your Major Alias</label>
-                      <Input 
-                        placeholder="e.g. Alex Rivera" 
-                        value={formData.name}
-                        onChange={(e) => setFormData({...formData, name: e.target.value})}
-                        className="h-14 bg-background-secondary border-border-tertiary rounded-[12px] text-[16px] px-5 focus-visible:ring-solo-blue/20 focus-visible:border-solo-blue transition-all"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[11px] font-bold uppercase tracking-[0.2em] text-text-tertiary ml-1">Agency / Practice Name</label>
-                      <Input 
-                        placeholder="e.g. Design Lab OS" 
-                        value={formData.agency}
-                        onChange={(e) => setFormData({...formData, agency: e.target.value})}
-                        className="h-14 bg-background-secondary border-border-tertiary rounded-[12px] text-[16px] px-5 focus-visible:ring-solo-blue/20 focus-visible:border-solo-blue transition-all"
-                      />
-                    </div>
-                  </div>
+        {/* CARD */}
+        <div className="bg-white border border-border-tertiary rounded-[32px] p-10 md:p-14 shadow-2xl shadow-black/[0.03] min-h-[500px] flex flex-col relative overflow-hidden backdrop-blur-xl bg-white/80">
+          <AnimatePresence mode="wait">
+            {step === 0 && (
+              <motion.div
+                key="step0"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="space-y-10"
+              >
+                <div className="space-y-4">
+                  <h1 className="font-serif text-[38px] md:text-[48px] font-bold text-text-primary tracking-tight leading-[1.1]">
+                    Initiate <span className="text-solo-blue">Soloist</span>.
+                  </h1>
+                  <p className="text-text-secondary text-[18px] leading-relaxed max-w-[450px]">
+                    Tell us who you are and what you build. Our AI will calibrate your Command Center interface.
+                  </p>
                 </div>
-              )}
 
-              {step === 1 && (
-                <div className="space-y-8 h-full">
-                   <div className="space-y-3">
-                    <h1 className="font-serif text-[32px] md:text-[42px] font-bold text-text-primary tracking-tight leading-none">
-                      Define your Niche.
-                    </h1>
-                    <p className="text-text-secondary text-[16px] leading-relaxed">
-                      The AI surfaces opportunities based on your specific gravity. Which sector do you pull from?
-                    </p>
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-bold uppercase tracking-[0.2em] text-text-tertiary ml-1">Real Name / Alias</label>
+                    <Input 
+                      placeholder="e.g. Daksh Shrivastav" 
+                      value={formData.name}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      className="h-14 bg-white/50 border-border-tertiary rounded-[16px] text-[16px] px-6 shadow-sm focus-visible:ring-solo-blue/20"
+                    />
                   </div>
-
-                  <div className="grid grid-cols-2 gap-3 pt-2">
-                    {["B2B SaaS", "Fintech UX", "Web3 / Crypto", "Brand Systems", "AI Tooling", "Mobile Apps"].map((n) => (
-                      <button
-                        key={n}
-                        onClick={() => setFormData({...formData, niche: n})}
-                        className={`h-14 rounded-[14px] border px-4 text-[14px] font-bold transition-all flex items-center justify-between ${formData.niche === n ? "bg-solo-blue/5 border-solo-blue text-solo-blue shadow-sm" : "bg-white border-border-tertiary text-text-secondary hover:border-solo-blue/40"}`}
-                      >
-                        {n}
-                        {formData.niche === n && <Check className="w-4 h-4" />}
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="pt-4 flex items-center gap-3 text-[12px] font-medium text-text-tertiary italic">
-                    <Sparkles className="w-3.5 h-3.5 text-solo-amber" />
-                    AI uses this to filter the Opportunity Radar.
-                  </div>
-                </div>
-              )}
-
-              {step === 2 && (
-                <div className="flex flex-col items-center justify-center h-full text-center space-y-8 py-10">
-                  <div className="relative">
-                    <div className="absolute inset-0 bg-solo-blue/20 blur-2xl rounded-full animate-pulse" />
-                    <div className="relative bg-white border border-border-tertiary w-24 h-24 rounded-3xl flex items-center justify-center shadow-xl">
-                      <Zap className="w-10 h-10 text-solo-blue animate-bounce" />
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <h2 className="font-serif text-[28px] font-bold text-text-primary tracking-tight">
-                      Calibrating your OS...
-                    </h2>
-                    <div className="flex flex-col gap-1 text-[13px] font-mono text-solo-blue font-bold tracking-tight opacity-70">
-                      <span>{">"} Injecting sector intelligence: {formData.niche}</span>
-                      <span>{">"} Configuring Ops automation...</span>
-                      <span>{">"} Wiring Radar signals...</span>
-                    </div>
-                  </div>
-
-                  <div className="w-full max-w-[240px] h-1.5 bg-background-secondary rounded-full overflow-hidden">
-                    <motion.div 
-                      initial={{ width: 0 }}
-                      animate={{ width: "100%" }}
-                      transition={{ duration: 3.5, ease: "linear" }}
-                      className="h-full bg-solo-blue"
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-bold uppercase tracking-[0.2em] text-text-tertiary ml-1">The Mission (Bio/Goals)</label>
+                    <Textarea 
+                      placeholder="e.g. I'm a Senior QA Engineer specializing in automated CI/CD pipelines. I want to scale my high-tier architectural consulting." 
+                      value={formData.bio}
+                      onChange={(e) => setFormData({...formData, bio: e.target.value})}
+                      className="min-h-[120px] bg-white/50 border-border-tertiary rounded-[16px] text-[16px] p-6 shadow-sm focus-visible:ring-solo-blue/20"
                     />
                   </div>
                 </div>
-              )}
 
-              {step === 3 && (
-                <div className="flex flex-col items-center justify-center h-full text-center space-y-8 animate-in zoom-in-95 duration-700">
-                  <div className="w-20 h-20 bg-solo-teal/10 border border-solo-teal/20 rounded-full flex items-center justify-center">
-                    <Rocket className="w-10 h-10 text-solo-teal" />
-                  </div>
+                <Button 
+                  disabled={!formData.name || !formData.bio || isCalibrating}
+                  onClick={handleCalibrate}
+                  className="w-full bg-solo-blue hover:bg-solo-blue/90 text-white rounded-[16px] h-16 text-[16px] font-bold shadow-xl shadow-solo-blue/20 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-40"
+                >
+                  {isCalibrating ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Wand2 className="w-5 h-5" /> Calibrate My Workspace</>}
+                </Button>
+              </motion.div>
+            )}
 
-                  <div className="space-y-4">
-                    <h1 className="font-serif text-[32px] md:text-[42px] font-bold text-text-primary tracking-tight leading-tight">
-                      System Operational.
-                    </h1>
-                    <p className="text-text-secondary text-[16px] leading-relaxed max-w-[320px] mx-auto">
-                      Your agency command center is live and calibrated for <strong>{formData.agency || "Soloist"}</strong>.
-                    </p>
-                  </div>
-
-                  <Button 
-                    onClick={handleFinish}
-                    className="group bg-solo-blue hover:bg-solo-blue/90 text-white rounded-[12px] h-14 px-10 text-[16px] font-bold shadow-xl shadow-solo-blue/30 transition-all hover:scale-[1.05]"
+            {step === 1 && (
+              <motion.div
+                key="step1"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex flex-col items-center justify-center h-[350px] text-center space-y-10"
+              >
+                <div className="relative">
+                  <div className="absolute inset-0 bg-solo-blue/20 blur-3xl rounded-full animate-pulse" />
+                  <motion.div 
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                    className="relative w-28 h-28 rounded-[32px] border-2 border-solo-blue/20 flex items-center justify-center"
                   >
-                    Enter Command Center
-                    <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </Button>
+                    <Zap className="w-12 h-12 text-solo-blue fill-current" />
+                  </motion.div>
                 </div>
-              )}
-            </motion.div>
-          </AnimatePresence>
+                <div className="space-y-4">
+                  <h2 className="font-serif text-[28px] font-bold text-text-primary tracking-tight">AI Calibration in Progress...</h2>
+                  <div className="flex flex-col gap-2 text-[13px] font-mono text-solo-blue/70">
+                    <p className="animate-pulse">{">"} Scraping market intelligence for 2026...</p>
+                    <p className="animate-pulse delay-75">{">"} Structuring {formData.name}&apos;s agency profile...</p>
+                    <p className="animate-pulse delay-150">{">"} Configuring sector: {formData.bio.slice(0, 20)}...</p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
 
-          {/* NAV BUTTONS */}
-          {step < 2 && (
-            <div className="mt-12 flex items-center justify-between pt-8 border-t border-border-tertiary">
-              <Button 
-                variant="ghost" 
-                onClick={prevStep}
-                disabled={step === 0}
-                className="text-[14px] font-bold text-text-tertiary hover:text-text-primary h-12"
+            {step === 2 && (
+              <motion.div
+                key="step2"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="space-y-8"
               >
-                Back
-              </Button>
-              <Button 
-                onClick={nextStep}
-                disabled={step === 0 ? !formData.name : step === 1 ? !formData.niche : false}
-                className="bg-black hover:bg-black/90 text-white rounded-[10px] h-12 px-8 text-[14px] font-bold transition-all active:scale-95 disabled:opacity-30"
-              >
-                Continue <ArrowRight className="ml-2 w-4 h-4" />
-              </Button>
-            </div>
-          )}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-solo-teal text-[12px] font-bold uppercase tracking-widest">
+                    <ShieldCheck className="w-4 h-4" /> AI Configuration Generated
+                  </div>
+                  <h2 className="font-serif text-[32px] font-bold text-text-primary tracking-tight">System Baseline Ready.</h2>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-6 bg-solo-blue/5 border border-solo-blue/10 rounded-[20px] space-y-2">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-text-tertiary">Agency Brand</span>
+                    <p className="text-[18px] font-serif font-bold text-solo-blue">{formData.agency}</p>
+                  </div>
+                  <div className="p-6 bg-solo-teal/5 border border-solo-teal/10 rounded-[20px] space-y-2">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-text-tertiary">Primary Niche</span>
+                    <p className="text-[18px] font-serif font-bold text-solo-teal">{formData.niche}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4 pt-2">
+                   <span className="text-[11px] font-bold uppercase tracking-widest text-text-tertiary ml-1">Targeted Strategic Goals</span>
+                   <div className="space-y-3">
+                     {formData.goals.map((goal, i) => (
+                       <div key={i} className="flex items-center gap-4 p-4 bg-white border border-border-tertiary rounded-[14px] shadow-sm">
+                         <div className="w-6 h-6 rounded-full bg-background-secondary flex items-center justify-center shrink-0">
+                           <Trophy className="w-3 h-3 text-solo-amber" />
+                         </div>
+                         <span className="text-[14px] font-bold text-text-secondary leading-tight">{goal}</span>
+                       </div>
+                     ))}
+                   </div>
+                </div>
+
+                <div className="flex gap-4 pt-6">
+                   <Button variant="ghost" onClick={() => setStep(0)} className="flex-1 h-14 rounded-[16px] text-[14px] font-bold text-text-tertiary hover:text-text-primary">
+                     Recalibrate
+                   </Button>
+                   <Button onClick={handleFinish} className="flex-[2] bg-solo-blue hover:bg-solo-blue/90 text-white rounded-[16px] h-14 font-black shadow-xl shadow-solo-blue/20 flex items-center justify-center gap-2 group transition-all hover:scale-[1.02]">
+                     Initiate Command Center <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                   </Button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        <div className="mt-8 text-center">
-           <p className="text-[11px] font-bold uppercase tracking-widest text-text-tertiary opacity-40">
-             Soloist Calibration v1.0.4 — © 2026 Antigravity
-           </p>
+        <div className="mt-10 text-center">
+           <div className="flex items-center justify-center gap-2 mb-2">
+             <div className="w-1.5 h-1.5 rounded-full bg-solo-teal animate-pulse" />
+             <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-tertiary">OS CALIBRATION v2.0 AI-DIRECTED</span>
+           </div>
+           <p className="text-[11px] font-medium text-text-tertiary/40">© 2026 ANTIGRAVITY OS • ALL SYSTEMS NOMINAL</p>
         </div>
       </div>
     </main>

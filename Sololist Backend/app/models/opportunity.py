@@ -17,9 +17,13 @@ class Opportunity(Base):
     description = Column(String(1000), nullable=True)
     platform = Column(String(50), nullable=True)
     rate = Column(String(50), nullable=True)
+    url = Column(String(500), nullable=True)
     
     badge_color = Column(String(50), nullable=True, default="bg-solo-blue")
     badge_text = Column(String(50), nullable=True, default="text-solo-blue")
+    
+    verified = Column(Integer, default=1) # Using 1 for True, 0 for False (sqlite/standard)
+    is_freelance = Column(Integer, default=1)
 
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())

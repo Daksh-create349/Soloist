@@ -13,8 +13,11 @@ class OpportunityBase(BaseModel):
     description: Optional[str] = None
     platform: Optional[str] = None
     rate: Optional[str] = None
+    url: Optional[str] = None
     badge_color: Optional[str] = "bg-solo-blue"
     badge_text: Optional[str] = "text-solo-blue"
+    verified: bool = True
+    is_freelance: bool = True
 
 
 class OpportunityCreate(OpportunityBase):

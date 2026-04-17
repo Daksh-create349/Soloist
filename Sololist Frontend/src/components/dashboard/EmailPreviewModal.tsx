@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Sparkles, RefreshCcw } from "lucide-react";
-import { draftEmail } from "@/lib/api";
+import { draftEmail, getProfile, UserConfigResponse } from "@/lib/api";
 import { toast } from "sonner";
 
 interface EmailPreviewModalProps {
@@ -18,20 +18,42 @@ export function EmailPreviewModal({ isOpen, onOpenChange, context = "", tone = "
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [profile, setProfile] = useState<UserConfigResponse | null>(null);
+
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const data = await getProfile();
+        setProfile(data);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    fetchProfile();
+  }, []);
 
   const fetchDraft = async () => {
     try {
       setIsLoading(true);
       const data = await draftEmail({
-        client_id: 1, // Mock client_id, the actual UI would pick one
+        client_name: "Client",
+        client_email: "",
+        project: "current project",
         tone: tone,
         context: context,
       });
+      
       setSubject(data.subject);
       setBody(data.body);
     } catch (e) {
       console.error(e);
       toast.error("Failed to draft email");
+      
+      // Dynamic fallback
+      const firstName = profile?.name?.split(' ')[0] || "Daksh";
+      const niche = profile?.niche || "specialist";
+      setSubject(`Quick update on our ${context || 'project'}`);
+      setBody(`Hi there,\n\nI hope your week is going well! I'm reaching out as a ${niche} to give you a quick update on the project.\n\nLet me know if you have any questions.\n\nBest,\n${firstName}`);
     } finally {
       setIsLoading(false);
     }

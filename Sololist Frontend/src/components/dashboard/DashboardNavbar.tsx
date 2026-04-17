@@ -1,11 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { LayoutDashboard, Users, Zap, Target, DollarSign, Bell } from "lucide-react";
+import { NotificationSheet } from "./NotificationSheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
+import { getProfile, UserConfigResponse } from "@/lib/api";
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -16,14 +19,28 @@ const navItems = [
 ];
 
 export function DashboardNavbar() {
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [profile, setProfile] = useState<UserConfigResponse | null>(null);
   const pathname = usePathname();
+
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const data = await getProfile();
+        setProfile(data);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    fetchProfile();
+  }, []);
 
   return (
     <nav className="fixed top-0 left-0 right-0 h-[72px] bg-white/80 backdrop-blur-3xl border-b border-border-tertiary shadow-sm z-50 flex items-center justify-between px-6 md:px-12">
       <div className="flex items-center gap-12">
         {/* LOGO */}
-        <Link href="/dashboard" className="font-serif text-[24px] font-bold tracking-tight text-text-primary hover:opacity-80 transition-opacity">
-          Soloist<span className="text-solo-blue">.</span>
+        <Link href="/dashboard" className="font-serif text-[22px] font-bold tracking-tight text-text-primary hover:opacity-80 transition-opacity flex items-center gap-1">
+          {profile?.agency_name || "Soloist"}<span className="text-solo-blue">.</span>
         </Link>
 
         {/* NAVIGATION LINKS */}
@@ -73,12 +90,14 @@ export function DashboardNavbar() {
 
           <div className="flex items-center gap-3">
             <div className="flex flex-col items-end hidden sm:flex">
-              <span className="text-[13px] font-bold text-text-primary">Alex Rivera</span>
-              <span className="text-[10px] font-bold tracking-widest uppercase text-solo-blue">Pro Plan</span>
+              <span className="text-[13px] font-bold text-text-primary">{profile?.name || "Operator"}</span>
+              <span className="text-[10px] font-bold tracking-widest uppercase text-solo-blue">{profile?.agency_name || "Solo Pro"}</span>
             </div>
             <Avatar className="w-9 h-9 border-2 border-white shadow-sm ring-2 ring-solo-blue/20 transition-all hover:ring-solo-blue cursor-pointer active:scale-95">
-              <AvatarImage src="https://i.pravatar.cc/150?u=a042581f4e29026024d" />
-              <AvatarFallback className="bg-solo-blue text-white text-[12px] font-bold">AR</AvatarFallback>
+              <AvatarImage src={`https://i.pravatar.cc/150?u=${profile?.name}`} />
+              <AvatarFallback className="bg-solo-blue text-white text-[12px] font-bold">
+                {profile?.name ? profile.name.split(' ').map(n=>n[0]).join('') : "OP"}
+              </AvatarFallback>
             </Avatar>
           </div>
         </div>

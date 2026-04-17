@@ -140,7 +140,7 @@ export function OpportunityFeed() {
                   <hr className="border-border-tertiary mb-4" />
 
                   <div className="flex items-center gap-3">
-                    <ProposalDrawer>
+                    <ProposalDrawer opportunity={item}>
                        <Button className="bg-solo-blue hover:bg-solo-blue/90 text-white shadow-sm text-[12px] font-bold h-9 active:scale-95 transition-all">
                          Draft Proposal
                        </Button>
