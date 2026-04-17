@@ -42,9 +42,10 @@ export function ClientDetail({ client }: ClientDetailProps) {
     if (!intelligence) return;
     setIsDraftingUpsell(true);
     try {
-      const response = await draftEmail({
-        recipient_name: client.name,
-        company_name: client.company,
+      await draftEmail({
+        client_name: client.name,
+        client_email: client.email ?? "",
+        project: client.project,
         tone: "professional",
         context: `Upsell opportunities for ${client.project} based on account signal: ${intelligence.upsell.signal}`
       });
@@ -107,13 +108,9 @@ export function ClientDetail({ client }: ClientDetailProps) {
               >
                 <MessageSquare className="w-3.5 h-3.5 mr-2" /> Message
               </Button>
-              <Button 
-                variant="ghost" 
-                onClick={() => handleAction("New invoice generation")}
-                className="bg-white border border-border-tertiary hover:bg-background-secondary text-text-primary rounded-[6px] h-9 px-5 text-[12px] font-bold shadow-sm transition-all active:scale-95"
-              >
-                <NewInvoiceIcon className="w-3.5 h-3.5 mr-2" /> New Invoice
-              </Button>
+              <NewInvoiceDrawer 
+                client={client}
+              />
             </div>
           </div>
         </div>

@@ -53,3 +53,7 @@ Sololist Backend/soloist.db-journal
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Secrets
+soloist-*.json
+*.json

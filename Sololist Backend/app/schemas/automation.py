@@ -12,7 +12,7 @@ class AutomationBase(BaseModel):
     action_type: Optional[str] = None
     delay_days: Optional[int] = Field(default=3, ge=0)
     tone: Optional[str] = Field(default="professional")
-    conditions: Optional[dict[str, Any]] = None
+    conditions: Optional[Any] = None
 
 
 class AutomationCreate(AutomationBase):
@@ -30,7 +30,7 @@ class AutomationUpdate(BaseModel):
     action_type: Optional[str] = None
     delay_days: Optional[int] = Field(default=None, ge=0)
     tone: Optional[str] = None
-    conditions: Optional[dict[str, Any]] = None
+    conditions: Optional[Any] = None
 
 
 class AutomationResponse(BaseModel):
@@ -45,6 +45,6 @@ class AutomationResponse(BaseModel):
     action_type: Optional[str] = None
     delay_days: Optional[int] = None
     tone: Optional[str] = None
-    conditions: Optional[dict[str, Any]] = None
+    conditions: Optional[Any] = None
 
     model_config = {"from_attributes": True}

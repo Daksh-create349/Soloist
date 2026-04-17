@@ -41,13 +41,23 @@ export function AutomationBuilder({ isOpen, onOpenChange, onAutomationAdded }: A
   const handleSave = async (activate: boolean) => {
     try {
        setIsSubmitting(true);
+       const triggerName = formData.trigger_type.replace(/_/g, ' ');
+       const actionName = formData.action_type.replace(/_/g, ' ');
+       
+       const conditionsObj = formData.conditions.reduce((acc, curr) => {
+         acc[curr] = true;
+         return acc;
+       }, {} as Record<string, boolean>);
+
        await createAutomation({
          name: formData.name + (activate ? "" : " (Draft)"),
+         trigger: triggerName,
+         action: actionName,
          trigger_type: formData.trigger_type,
          action_type: formData.action_type,
          delay_days: formData.delay_days,
          tone: formData.tone,
-         conditions: formData.conditions,
+         conditions: conditionsObj,
        });
        toast.success(activate ? "Automation saved and activated!" : "Automation saved as draft");
        onOpenChange(false);
@@ -93,10 +103,11 @@ export function AutomationBuilder({ isOpen, onOpenChange, onAutomationAdded }: A
                       className="w-full bg-transparent text-[13px] font-semibold text-text-primary focus:outline-none cursor-pointer"
                     >
                       <option value="invoice_unpaid">Invoice is unpaid after X days</option>
-                      <option value="proposal_sent">Proposal sent with no reply after X hours</option>
-                      <option value="health_drop">Client health score drops below X</option>
-                      <option value="new_client">New client added</option>
-                      <option value="project_complete">Project marked complete</option>
+                      <option value="meeting_ended">Google Meet ends</option>
+                      <option value="test_fails">GitHub Action / Cypress suite fails</option>
+                      <option value="github_pr_merged">Client merges my PR</option>
+                      <option value="new_client">New QA/Dev client added</option>
+                      <option value="project_complete">Testing suite complete</option>
                     </select>
                   </div>
 
@@ -131,9 +142,10 @@ export function AutomationBuilder({ isOpen, onOpenChange, onAutomationAdded }: A
                       className="w-full bg-transparent text-[13px] font-semibold text-text-primary focus:outline-none cursor-pointer"
                     >
                       <option value="email">Send email (AI-drafted)</option>
-                      <option value="template">Send email (from template)</option>
-                      <option value="task">Create task for me</option>
-                      <option value="draft_invoice">Generate invoice</option>
+                      <option value="sync_notion">Transcribe Meet & Push to Notion</option>
+                      <option value="add_calendar">Add Event to Google Calendar</option>
+                      <option value="sync_jira">Sync Bug Report to JIRA & Slack</option>
+                      <option value="generate_proposal">Draft customized QA Proposal</option>
                     </select>
                   </div>
 

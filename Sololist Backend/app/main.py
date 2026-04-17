@@ -15,9 +15,8 @@ settings = get_settings()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Run on startup: create tables and seed data."""
+    """Run on startup: create tables."""
     create_tables()
-    seed()
     yield
 
 
@@ -28,14 +27,9 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS — allow frontend at localhost:3000
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        settings.FRONTEND_URL,
-        "http://localhost:3000",
-        "http://localhost:3001",
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

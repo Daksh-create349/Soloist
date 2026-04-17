@@ -1,4 +1,4 @@
-"""Seed the database with initial data matching the frontend mockData.ts."""
+"""Seed the database with initial data matching the Blender Graphic Designer persona."""
 
 from app.database import SessionLocal, create_tables
 from app.models.client import Client
@@ -7,6 +7,7 @@ from app.models.capacity import Capacity
 from app.models.invoice import Invoice
 from app.models.opportunity import Opportunity
 from app.models.message import Message
+from app.models.profile import UserConfig
 from datetime import date, datetime, timedelta
 
 
@@ -16,330 +17,247 @@ def seed():
     db = SessionLocal()
 
     try:
-        # Only seed if the database is empty
-        if db.query(Client).count() > 0:
-            print("Database already seeded. Skipping.")
-            return
+        # Clear existing data to ensure persona sync is perfect
+        db.query(Client).delete()
+        db.query(Automation).delete()
+        db.query(Opportunity).delete()
+        db.query(Invoice).delete()
+        db.query(Message).delete()
+        db.query(Capacity).delete()
+        db.query(UserConfig).delete()
+        db.commit()
 
-        print("Seeding database...")
+        print("Seeding database for Daksh Shrivastav (3D Artist)...")
 
-        # ── Clients (matching initialClients in mockData.ts) ──
+        # ── Profile ──
+        profile = UserConfig(
+            id=1,
+            name="Daksh Shrivastav",
+            agency_name="D-Motion Studios",
+            niche="Blender Graphic Designing",
+            goals=["Scale to $20k MRR", "Build 3D Asset Library", "Hire Junior Modeler"]
+        )
+        db.add(profile)
+
+        # ── Clients (3D / Animation / Design) ──
         clients = [
             Client(
                 id=1,
-                name="Sarah Chen",
-                company="Stripe Inc.",
-                email="sarah@stripe.com",
-                initials="SC",
+                name="Sarah Jenkins",
+                company="Unity Studios",
+                email="sarah@unity.com",
+                initials="SJ",
                 avatar_bg="bg-solo-blue",
-                project="Brand Redesign",
-                project_type="Design",
+                project="Real-time Environment Assets",
+                project_type="3D Environment Design",
                 status="Active",
                 health_color="bg-solo-teal",
-                health_score=92,
-                last_active="2h ago",
+                health_score=98,
+                last_active="10m ago",
                 start_date="Jan '25",
-                progress=68,
+                progress=65,
                 gross_worth=12000.0,
-                collected=8400.0,
+                collected=8500.0,
                 collected_percent=70,
-                source="referral",
+                source="Upwork",
                 budget=12000.0,
             ),
             Client(
                 id=2,
-                name="Marcus Webb",
-                company="Acme Corp",
-                email="marcus@acmecorp.com",
-                initials="MW",
-                avatar_bg="bg-zinc-800",
-                project="SEO Campaign",
-                project_type="Marketing",
-                status="Needs attention",
-                health_color="bg-solo-amber",
-                health_score=65,
-                last_active="4d ago",
-                start_date="Dec '24",
-                progress=45,
-                gross_worth=8500.0,
-                collected=4250.0,
-                collected_percent=50,
-                source="linkedin",
-                budget=8500.0,
+                name="Marco Rossi",
+                company="Pixar Animation",
+                email="m.rossi@pixar.com",
+                initials="MR",
+                avatar_bg="bg-solo-indigo",
+                project="Character Sculpting (Hero A)",
+                project_type="3D Modeling",
+                status="Active",
+                health_color="bg-solo-teal",
+                health_score=92,
+                last_active="2h ago",
+                start_date="Feb '25",
+                progress=40,
+                gross_worth=18000.0,
+                collected=5000.0,
+                collected_percent=27,
+                source="Referral",
+                budget=18000.0,
             ),
             Client(
                 id=3,
-                name="Priya Nair",
-                company="NovaTech",
-                email="priya@novatech.io",
-                initials="PN",
-                avatar_bg="bg-solo-teal",
-                project="Dev Consulting",
-                project_type="Consulting",
-                status="At risk",
-                health_color="bg-solo-coral",
-                health_score=38,
-                last_active="12d ago",
-                start_date="Sep '24",
+                name="Elena Vance",
+                company="Architectural Visuals",
+                email="elena@archviz.net",
+                initials="EV",
+                avatar_bg="bg-solo-amber",
+                project="Luxury Penthouse Rendering",
+                project_type="ArchViz",
+                status="Paused",
+                health_color="bg-solo-amber",
+                health_score=75,
+                last_active="2d ago",
+                start_date="Dec '24",
                 progress=90,
-                gross_worth=25000.0,
-                collected=22500.0,
-                collected_percent=90,
-                source="website",
-                budget=25000.0,
+                gross_worth=8500.0,
+                collected=8500.0,
+                collected_percent=100,
+                source="LinkedIn",
+                budget=8500.0,
             ),
             Client(
                 id=4,
-                name="James Liu",
-                company="Moonbase Studio",
-                email="james@moonbase.co",
-                initials="JL",
-                avatar_bg="bg-solo-amber",
-                project="Copywriting",
-                project_type="Marketing",
-                status="Active",
-                health_color="bg-solo-teal",
-                health_score=88,
-                last_active="1d ago",
-                start_date="Feb '25",
-                progress=15,
-                gross_worth=4200.0,
-                collected=2100.0,
-                collected_percent=50,
-                source="upwork",
-                budget=4200.0,
-            ),
-            Client(
-                id=5,
-                name="Tara Singh",
-                company="BloomVC",
-                email="tara@bloomvc.com",
-                initials="TS",
+                name="Tariq Khan",
+                company="IndieGames Co",
+                email="tariq@indiegames.io",
+                initials="TK",
                 avatar_bg="bg-solo-coral",
-                project="Pitch Deck",
-                project_type="Design",
-                status="Active",
-                health_color="bg-solo-teal",
-                health_score=95,
-                last_active="3h ago",
-                start_date="Mar '25",
-                progress=10,
-                gross_worth=6500.0,
-                collected=6500.0,
-                collected_percent=100,
-                source="referral",
-                budget=6500.0,
+                project="Hard Surface Weapon Pack",
+                project_type="Game Assets",
+                status="At risk",
+                health_color="bg-solo-coral",
+                health_score=35,
+                last_active="1w ago",
+                start_date="Jan '25",
+                progress=15,
+                gross_worth=4500.0,
+                collected=500.0,
+                collected_percent=11,
+                source="Upwork",
+                budget=4500.0,
             ),
         ]
         db.add_all(clients)
 
-        # ── Automations (matching initialAutomations in mockData.ts) ──
+        # ── Automations (3D Artist specific) ──
         automations = [
             Automation(
                 id=1,
-                name="New Client Onboarding",
-                trigger="New client added",
-                action="Send scope + scope doc + first invoice",
+                name="Render Completion Notify",
+                trigger="Dropbox folder syncs .exr",
+                action="Send Slack notification & Update Notion Status",
                 status="Active",
-                last_run="2h ago",
-                trigger_type="new_client",
-                action_type="send_email",
+                last_run="15 mins ago",
+                trigger_type="file_added",
+                action_type="sync_notion",
                 delay_days=0,
                 tone="professional",
             ),
             Automation(
                 id=2,
-                name="Late Payment Follow-up",
-                trigger="Invoice overdue > 3 days",
-                action="Send AI-drafted reminder email",
+                name="Daily Progress Render",
+                trigger="Every day at 6:00 PM",
+                action="Email latest render to client via Gmail",
                 status="Active",
                 last_run="Yesterday",
-                trigger_type="invoice_overdue",
+                trigger_type="schedule",
                 action_type="send_email",
-                delay_days=3,
+                delay_days=0,
                 tone="friendly",
             ),
             Automation(
                 id=3,
-                name="Project Milestones",
-                trigger="Client approves milestone",
-                action="Notify client + send next invoice",
-                status="Paused",
-                last_run="4 days ago",
-                trigger_type="milestone_approved",
-                action_type="send_email",
+                name="Milestone Calendar Sync",
+                trigger="Notion Database 'Deadline' change",
+                action="Sync event to Google Calendar",
+                status="Active",
+                last_run="3 days ago",
+                trigger_type="notion_updated",
+                action_type="add_calendar",
                 delay_days=0,
                 tone="professional",
             ),
             Automation(
                 id=4,
-                name="Lead Qualification",
-                trigger="New lead from Radar",
-                action="Run profile match + AI draft proposal",
+                name="AI Proposal Draft",
+                trigger="New Upwork matching 'Blender 3D'",
+                action="Draft personalized proposal with AI",
                 status="Active",
                 last_run="1 hour ago",
                 trigger_type="new_lead",
                 action_type="generate_proposal",
                 delay_days=0,
-                tone="professional",
-            ),
-            Automation(
-                id=5,
-                name="Weekly Status Update",
-                trigger="Every Friday at 5 PM",
-                action="Generate report + email to all active clients",
-                status="Active",
-                last_run="Last Friday",
-                trigger_type="scheduled",
-                action_type="generate_report",
-                delay_days=0,
-                tone="professional",
+                tone="persuasive",
             ),
         ]
         db.add_all(automations)
 
-        # ── Capacity ──
-        capacity = Capacity(
-            id=1,
-            total_hours_weekly=45,
-            billable_target=35,
-            current_billable=28,
-            current_ops=7,
-        )
-        db.add(capacity)
-
-        # ── Sample Invoices ──
-        today = date.today()
-        invoices = [
-            Invoice(
-                client_id=1,
-                invoice_number="#001",
-                amount=2800.0,
-                status="paid",
-                due_date=today - timedelta(days=10),
-                paid_date=today - timedelta(days=8),
-            ),
-            Invoice(
-                client_id=1,
-                invoice_number="#002",
-                amount=2800.0,
-                status="paid",
-                due_date=today - timedelta(days=5),
-                paid_date=today - timedelta(days=2),
-            ),
-            Invoice(
-                client_id=1,
-                invoice_number="#003",
-                amount=2800.0,
-                status="sent",
-                due_date=today + timedelta(days=5),
-            ),
-            Invoice(
-                client_id=2,
-                invoice_number="#001",
-                amount=4250.0,
-                status="paid",
-                due_date=today - timedelta(days=15),
-                paid_date=today - timedelta(days=14),
-            ),
-            Invoice(
-                client_id=3,
-                invoice_number="#001",
-                amount=12500.0,
-                status="paid",
-                due_date=today - timedelta(days=60),
-                paid_date=today - timedelta(days=58),
-            ),
-            Invoice(
-                client_id=3,
-                invoice_number="#002",
-                amount=10000.0,
-                status="overdue",
-                due_date=today - timedelta(days=3),
-            ),
-        ]
-        db.add_all(invoices)
-
-        # ── Opportunities (Radar) ──
+        # ── Opportunities (Blender / 3D Modeling) ──
         opportunities = [
             Opportunity(
                 id=1,
-                title="Senior UX Designer needed for fintech app",
-                company="Nexus Finance",
-                source="Upwork",
-                budget="$85/hr · Contract",
-                match_score=96,
-                posted_at="2 hours ago",
-                description="Looking for a seasoned UX Designer to lead the redesign of our flagship mobile banking application. Must have experience with complex financial dashboards and accessibility standards.",
-                platform="Upwork",
-                rate="$85/hr",
-                badge_color="bg-solo-teal",
-                badge_text="text-solo-teal",
-            ),
-            Opportunity(
-                id=2,
-                title="Full-stack developer for SaaS MVP build",
-                company="Lumina Labs",
+                title="Lead 3D Environment Artist (Blender)",
+                company="Ubisoft",
                 source="LinkedIn",
-                budget="$12k Fixed · 6 Weeks",
-                match_score=88,
-                posted_at="5 hours ago",
-                description="We need a full-stack expert to build the MVP for our next-gen project management tool. Tech stack: React, Node.js, PostgreSQL.",
+                budget="$80-$120/hr",
+                match_score=96,
+                posted_at="4h ago",
+                description="Looking for an expert Blender artist to lead a team in creating high-poly environment assets for an unannounced RPG project.",
                 platform="LinkedIn",
-                rate="$12,000",
+                rate="$100/hr",
+                url="https://www.linkedin.com/jobs/view/123456789",
                 badge_color="bg-solo-blue",
                 badge_text="text-solo-blue",
             ),
             Opportunity(
+                id=2,
+                title="3D Character Modeler for NFT Collection",
+                company="MagicEden Labs",
+                source="Upwork",
+                budget="$5,000 Flat",
+                match_score=88,
+                posted_at="2h ago",
+                description="Need a Blender wizard to sculpt 10 base characters with 50+ modular trait items (hats, eyewear, armor). High-poly to low-poly baking required.",
+                platform="Upwork",
+                rate="$5,000",
+                url="https://www.upwork.com/jobs/~0123456789abcdef",
+                badge_color="bg-solo-teal",
+                badge_text="text-solo-teal",
+            ),
+            Opportunity(
                 id=3,
-                title="Growth Marketer to scale B2B tool",
-                company="Velocity Scale",
-                source="Reddit",
-                budget="$70/hr · Part-time",
-                match_score=82,
-                posted_at="1 day ago",
-                description="Seeking a growth marketer with a track record in B2B SaaS. Responsible for content strategy, SEO, and paid acquisition.",
-                platform="Reddit",
-                rate="$70/hr",
-                badge_color="bg-solo-amber",
-                badge_text="text-solo-amber",
+                title="Product Visualization (Blender + Cycles)",
+                company="Logitech G",
+                source="Direct Portal",
+                budget="$150/hr",
+                match_score=92,
+                posted_at="1h ago",
+                description="Ongoing contract for high-end product renders of gaming hardware. Must be expert in Cycles/Eevee and product lighting.",
+                platform="Website",
+                rate="$150/hr",
+                url="https://logitech.com/careers/3d-design",
+                badge_color="bg-solo-indigo",
+                badge_text="text-solo-indigo",
             ),
         ]
         db.add_all(opportunities)
 
-        # ── Sample Messages ──
+        # ── Capacity ──
+        capacity = Capacity(
+            id=1,
+            total_hours_weekly=40,
+            billable_target=30,
+            current_billable=22,
+            current_ops=8,
+        )
+        db.add(capacity)
+
+        # ── Invoices ──
+        today = date.today()
+        invoices = [
+            Invoice(client_id=1, invoice_number="INV-3D-001", amount=4500.0, status="paid", due_date=today - timedelta(days=10), paid_date=today - timedelta(days=8)),
+            Invoice(client_id=2, invoice_number="INV-3D-002", amount=5000.0, status="pending", due_date=today + timedelta(days=5)),
+        ]
+        db.add_all(invoices)
+
+        # ── Messages ──
         messages = [
-            Message(
-                client_id=1,
-                role="client",
-                content="Hi! Just wanted to say I'm loving the initial brand concepts. Can we discuss the color palette on Tuesday?",
-                timestamp=datetime.now() - timedelta(hours=5),
-                is_read=False
-            ),
-            Message(
-                client_id=1,
-                role="user",
-                content="So glad you like them, Sarah! I've marked Tuesday at 10 AM for our call. I'll prepare some color variations by then.",
-                timestamp=datetime.now() - timedelta(hours=4),
-                is_read=True
-            ),
-            Message(
-                client_id=2,
-                role="client",
-                content="Hey Marcus, can you send over the SEO report for last month? Thanks!",
-                timestamp=datetime.now() - timedelta(days=1),
-                is_read=True
-            )
+            Message(client_id=1, role="client", content="Hey Daksh, the latest renders for the Unity project look incredible! Can we add a night theme?", timestamp=datetime.now() - timedelta(hours=2), is_read=False),
+            Message(client_id=1, role="user", content="Thanks Sarah! Absolutely, I'll set up the lighting for a night cycle today.", timestamp=datetime.now() - timedelta(hours=1), is_read=True),
         ]
         db.add_all(messages)
 
         db.commit()
-        print("✅ Database seeded successfully!")
-        print(f"   → {len(clients)} clients")
-        print(f"   → {len(automations)} automations")
-        print(f"   → {len(invoices)} invoices")
-        print(f"   → {len(messages)} messages")
-        print(f"   → 1 capacity config")
+        print("✅ Database re-seeded for Daksh Shrivastav successfully!")
 
     except Exception as e:
         db.rollback()
