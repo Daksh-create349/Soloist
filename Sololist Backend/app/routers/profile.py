@@ -24,6 +24,7 @@ async def update_profile(profile_data: UserConfigCreate, background_tasks: Backg
     profile = db.query(UserConfig).filter(UserConfig.id == 1).first()
     
     old_niche = profile.niche if profile else None
+    is_new_profile = not profile
     
     if not profile:
         profile = UserConfig(id=1, **profile_data.model_dump())
@@ -35,8 +36,8 @@ async def update_profile(profile_data: UserConfigCreate, background_tasks: Backg
     db.commit()
     db.refresh(profile)
     
-    # If niche changed, trigger re-scouting
-    if old_niche != profile_data.niche:
+    # Always re-scout on first creation OR whenever niche changes
+    if is_new_profile or old_niche != profile_data.niche:
         background_tasks.add_task(re_scout_opportunities, profile_data.niche, db)
         
     return profile

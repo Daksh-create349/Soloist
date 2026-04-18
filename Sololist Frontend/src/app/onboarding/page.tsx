@@ -73,7 +73,10 @@ export default function OnboardingPage() {
         goals: formData.goals
       });
       toast.success("Command Center Operational", { id: toastId });
-      router.push("/dashboard");
+      // Small delay so the background re-scout can start before redirect
+      setTimeout(() => {
+        router.push("/dashboard?scouting=1");
+      }, 800);
     } catch (error) {
        router.push("/dashboard");
     }

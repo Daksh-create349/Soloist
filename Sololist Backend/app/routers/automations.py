@@ -122,22 +122,58 @@ async def execute_automation(auto_id: int, db: Session = Depends(get_db)):
             "detail": result
         }
 
-    # 4. EMAIL
+    # 4. EMAIL — AI-drafted body matching the preview
     if action_type == "send_email" or "email" in auto.action.lower():
-        user = get_key("gmail_user", settings.GMAIL_USER)
+        from app.services import ai_service
+        
+        user_email = get_key("gmail_user", settings.GMAIL_USER)
         pw = get_key("gmail_app_password", settings.GMAIL_APP_PASSWORD)
-        email_client = email_client_factory(user, pw)
-        target_email = user if user else "daksh.shrivastav.dev@gmail.com"
+        email_client = email_client_factory(user_email, pw)
+        target_email = user_email if user_email else (user_config.name + "@example.com" if user_config else "you@example.com")
+
+        # Build a rich context string so AI knows exactly what this email is for
+        trigger_label = (auto.trigger_type or auto.trigger or "").replace("_", " ")
+        delay_note = f" after {auto.delay_days} days" if auto.delay_days else ""
+        context = (
+            f"{trigger_label}{delay_note}. "
+            f"Automation: {auto.name}. "
+            f"Send a {auto.tone or 'professional'} follow-up email."
+        )
+
+        # Generate the AI draft — same call as the preview modal
+        try:
+            draft = await ai_service.generate_email_draft(
+                client_name="Client",
+                client_email=target_email,
+                project="active project",
+                tone=auto.tone or "professional",
+                context=context,
+                user_name=user_config.name if user_config else "Soloist",
+                user_niche=user_config.niche if user_config else "Solo Operator",
+            )
+            subject = draft.get("subject", f"Soloist: {auto.name}")
+            body = draft.get("body", context)
+        except Exception as e:
+            print(f"AI draft failed, using fallback: {e}")
+            subject = f"Soloist: {auto.name}"
+            body = (
+                f"Hi,\n\n"
+                f"This is an automated reminder from your Soloist dashboard.\n\n"
+                f"Reason: {trigger_label}{delay_note}.\n\n"
+                f"Please take action at your earliest convenience.\n\n"
+                f"Best,\n{user_config.name if user_config else 'Soloist'}"
+            )
+
         result = email_client.send_email(
             to_email=target_email,
-            subject=f"Soloist Automation: {auto.name}",
-            body=f"This is an automated email from your Soloist dashboard.\n\nTrigger: {auto.trigger}\nAction: {auto.action}"
+            subject=subject,
+            body=body,
         )
         return {
-            "success": result.get("success", False), 
-            "message": result.get("message", "Triggered Email Send"), 
+            "success": result.get("success", False),
+            "message": result.get("message", "Triggered Email Send"),
             "simulated": result.get("simulated", False),
-            "detail": result
+            "detail": result,
         }
         
     return {"success": True, "message": f"Simulated successful execution for {auto.name}."}
