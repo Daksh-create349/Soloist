@@ -244,9 +244,8 @@ async def generate_opportunities(niche: str) -> list[dict]:
     
     # Live Market Context (April 2026)
     market_context = """
-    CURRENT TRENDS: High demand for SaaS Architects (React/Node), AI Automation (n8n/LLM integration), 
-    and EdTech platform builds. Clients priority is "Outcome-Driven" delivery and high-converting funnels.
-    PLATFORM DYNAMICS: Upwork has high volume for AI-focused roles; LinkedIn is driven by inbound/networking.
+    CURRENT TRENDS: High demand for specializing in the user's specific niche. Gigs should be tailored strictly to the industry and technical focus provided by the user.
+    CLIENT PRIORITIES: "Outcome-Driven" delivery, specialized expertise, and high-impact specialized solutions.
     """
 
     if settings.OPENAI_API_KEY:
@@ -255,21 +254,22 @@ async def generate_opportunities(niche: str) -> list[dict]:
             import json
             client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
-            system_prompt = f"""You are a high-end gig scouter for elite solo operators.
+            system_prompt = f"""You are a high-end gig scouter for elite solo operators specializing in {niche}.
 CURRENT MARKET CONTEXT: {market_context}
 
-Generate 4 GENUINE and highly realistic FREELANCE GIGS for a {niche} specialist.
+Generate 4 GENUINE and highly realistic FREELANCE GIGS specifically for a {niche} specialist.
+STRICT REQUIREMENT: Gigs MUST be directly relevant to {niche}. If the niche is "Frontend Developer", do NOT return general "Software Engineer" or "Backend" roles.
 Base these on actual 2026 industry trends. 
 NEVER use the word "Job." Use "Project," "Gig," "Contract," or "Retainer."
 
 Return EXACTLY a JSON array of objects with these keys:
-- title: str (e.g. "SaaS Architecture Sprint", "AI-Powered Workflow Automation")
+- title: str (e.g. "Advanced {niche} Implementation", "Strategic {niche} Consulting")
 - company: str (Realistic high-tier startup or enterprise names)
 - source: str (Must be: "Upwork", "LinkedIn", or "Toptal")
 - budget: str (Realistic: e.g. "$120/hr", "$15,000 Flat", or "$2,500/mo Retainer")
 - match_score: int (between 85 and 99)
 - posted_at: str (e.g. "2h ago", "1 hour ago")
-- description: str (Brief, project-outcome focused)
+- description: str (Brief, project-outcome focused, strictly related to {niche})
 - platform: str (same as source)
 - rate: str (the rate part of budget)
 - url: str (Must be a REAL search URL for the platform, e.g. "https://www.upwork.com/nx/jobs/search/?q={niche}")
@@ -344,8 +344,8 @@ MARKET CONTEXT: {market_context}
 
 Return EXACTLY a JSON object with:
 - agency_name: str (Premium, sleek, or descriptive - e.g. "Arcturus Testing", "Pulse FullStack")
-- niche: str (Standardized industry niche - e.g. "Full-Stack Development", "QA Automation")
-- specialization: str (More granular focus)
+- niche: str (Standardized industry niche based STRICTLY on the bio - e.g. if bio says "Frontend", niche MUST be "Frontend Development")
+- specialization: str (More granular focus based on the bio)
 - goals: list[str] (4 clear, high-level growth goals based on the bio)
 """
 
@@ -365,10 +365,17 @@ Return EXACTLY a JSON object with:
             print(f"Calibration Error: {e}")
             pass
 
-    # Fallback
+    # Fallback logic logic to infer niche from bio if GPT fails
+    inferred_niche = "Independent Specialist"
+    if "frontend" in bio.lower(): inferred_niche = "Frontend Development"
+    elif "backend" in bio.lower(): inferred_niche = "Backend Development"
+    elif "fullstack" in bio.lower() or "full stack" in bio.lower(): inferred_niche = "Full-Stack Development"
+    elif "design" in bio.lower(): inferred_niche = "UI/UX Design"
+    elif "qa" in bio.lower() or "test" in bio.lower(): inferred_niche = "QA Automation"
+
     return {
         "agency_name": f"{name} Lab",
-        "niche": "Software Development",
-        "specialization": "Full-Cycle Engineering",
+        "niche": inferred_niche,
+        "specialization": "High-Impact Consulting",
         "goals": ["Scale revenue to $10k/mo", "Automate client acquisition", "Build high-impact projects", "Optimize time-to-delivery"]
     }
