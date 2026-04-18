@@ -12,11 +12,18 @@ from datetime import date, datetime, timedelta
 
 
 def seed():
-    """Populate the database with seed data."""
+    """Populate the database with seed data only if it hasn't been set up yet."""
     create_tables()
     db = SessionLocal()
 
     try:
+        # ── Skip seeding if a real profile already exists (set during onboarding) ──
+        existing_profile = db.query(UserConfig).filter(UserConfig.id == 1).first()
+        if existing_profile and existing_profile.name and existing_profile.name != "Daksh Shrivastav":
+            print(f"✅ Profile already exists for '{existing_profile.name}' (niche: {existing_profile.niche}). Skipping seed.")
+            db.close()
+            return
+
         # Clear existing data to ensure persona sync is perfect
         db.query(Client).delete()
         db.query(Automation).delete()
@@ -27,15 +34,21 @@ def seed():
         db.query(UserConfig).delete()
         db.commit()
 
-        print("Seeding database for Daksh Shrivastav (3D Artist)...")
+        # Use the real user's niche if available, else default to Blender persona
+        niche = existing_profile.niche if existing_profile else "Blender Graphic Designing"
+        seed_name = existing_profile.name if existing_profile else "Daksh Shrivastav"
+        seed_agency = existing_profile.agency_name if existing_profile else "D-Motion Studios"
+        seed_goals = existing_profile.goals if existing_profile else ["Scale to $20k MRR", "Build 3D Asset Library", "Hire Junior Modeler"]
+
+        print(f"Seeding database for {seed_name} ({niche})...")
 
         # ── Profile ──
         profile = UserConfig(
             id=1,
-            name="Daksh Shrivastav",
-            agency_name="D-Motion Studios",
-            niche="Blender Graphic Designing",
-            goals=["Scale to $20k MRR", "Build 3D Asset Library", "Hire Junior Modeler"]
+            name=seed_name,
+            agency_name=seed_agency,
+            niche=niche,
+            goals=seed_goals
         )
         db.add(profile)
 
@@ -181,52 +194,55 @@ def seed():
         ]
         db.add_all(automations)
 
-        # ── Opportunities (Blender / 3D Modeling) ──
+        # ── Opportunities (niche-matched) ──
         opportunities = [
             Opportunity(
                 id=1,
-                title="Lead 3D Environment Artist (Blender)",
+                title=f"Lead {niche} Artist (Blender)" if "Blender" in niche else f"Senior {niche} Specialist",
                 company="Ubisoft",
                 source="LinkedIn",
                 budget="$80-$120/hr",
                 match_score=96,
                 posted_at="4h ago",
-                description="Looking for an expert Blender artist to lead a team in creating high-poly environment assets for an unannounced RPG project.",
+                description=f"Looking for an expert {niche} specialist to lead high-impact contract work.",
                 platform="LinkedIn",
                 rate="$100/hr",
-                url="https://www.linkedin.com/jobs/view/123456789",
+                url=f"https://www.linkedin.com/jobs/search/?keywords={niche.replace(' ', '+')}",
                 badge_color="bg-solo-blue",
                 badge_text="text-solo-blue",
+                verified=True,
             ),
             Opportunity(
                 id=2,
-                title="3D Character Modeler for NFT Collection",
+                title=f"{niche} for High-Impact Project",
                 company="MagicEden Labs",
                 source="Upwork",
                 budget="$5,000 Flat",
                 match_score=88,
                 posted_at="2h ago",
-                description="Need a Blender wizard to sculpt 10 base characters with 50+ modular trait items (hats, eyewear, armor). High-poly to low-poly baking required.",
+                description=f"Need a {niche} expert to deliver a focused project with high attention to detail.",
                 platform="Upwork",
                 rate="$5,000",
-                url="https://www.upwork.com/jobs/~0123456789abcdef",
+                url=f"https://www.upwork.com/nx/jobs/search/?q={niche.replace(' ', '+')}",
                 badge_color="bg-solo-teal",
                 badge_text="text-solo-teal",
+                verified=True,
             ),
             Opportunity(
                 id=3,
-                title="Product Visualization (Blender + Cycles)",
+                title=f"{niche} Consultant — Retainer",
                 company="Logitech G",
                 source="Direct Portal",
                 budget="$150/hr",
                 match_score=92,
                 posted_at="1h ago",
-                description="Ongoing contract for high-end product renders of gaming hardware. Must be expert in Cycles/Eevee and product lighting.",
+                description=f"Ongoing retainer contract for a {niche} specialist. Must have portfolio demonstrating past results.",
                 platform="Website",
                 rate="$150/hr",
-                url="https://logitech.com/careers/3d-design",
+                url=f"https://www.toptal.com/freelance-jobs?q={niche.replace(' ', '+')}",
                 badge_color="bg-solo-indigo",
                 badge_text="text-solo-indigo",
+                verified=True,
             ),
         ]
         db.add_all(opportunities)

@@ -269,7 +269,16 @@ export function AutomationBuilder({ isOpen, onOpenChange, onAutomationAdded }: A
         </SheetContent>
       </Sheet>
 
-      <EmailPreviewModal isOpen={isPreviewOpen} onOpenChange={setIsPreviewOpen} context={`Client has an unpaid invoice after ${formData.delay_days} days`} tone={formData.tone} />
+      <EmailPreviewModal
+        isOpen={isPreviewOpen}
+        onOpenChange={setIsPreviewOpen}
+        triggerType={formData.trigger_type}
+        context={`Client has an unpaid invoice after ${formData.delay_days} days. Send a ${formData.tone} follow-up email to prompt payment.`}
+        tone={formData.tone}
+        recipientLabel="[Client Email]"
+        clientName="[Client Name]"
+        project="active project"
+      />
     </>
   );
 }
